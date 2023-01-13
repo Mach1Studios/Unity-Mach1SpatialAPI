@@ -240,7 +240,7 @@ public class M1Base : MonoBehaviour
 
             float radius = 0.1f;
 
-            Vector3[] edges = new Vector3[8] {
+            Vector3[] points = new Vector3[8] {
                 new Vector3(-1, 1, 1),
                 new Vector3(1, 1, 1),
                 new Vector3(-1, -1, 1),
@@ -253,17 +253,17 @@ public class M1Base : MonoBehaviour
 
             for (int i = 0; i < 8; i++)
             {
-                edges[i] = new Vector3(edges[i].x, edges[i].z, edges[i].y);
+                points[i] = new Vector3(points[i].x, points[i].z, points[i].y);
 
                 Gizmos.color = Color.red;
-                Gizmos.matrix = matInternal * (Matrix4x4.Translate(new Vector3(-radius, 0, 0)) * Matrix4x4.Translate(edges[i] * 0.5f));
+                Gizmos.matrix = matInternal * (Matrix4x4.Translate(new Vector3(-radius, 0, 0)) * Matrix4x4.Translate(points[i] * 0.5f));
                 Gizmos.DrawSphere(new Vector3(0, 0, 0), radius * coeffs[2 * i]);
 
                 Gizmos.color = Color.blue;
-                Gizmos.matrix = matInternal * (Matrix4x4.Translate(new Vector3(radius, 0, 0)) * Matrix4x4.Translate(edges[i] * 0.5f));
+                Gizmos.matrix = matInternal * (Matrix4x4.Translate(new Vector3(radius, 0, 0)) * Matrix4x4.Translate(points[i] * 0.5f));
                 Gizmos.DrawSphere(new Vector3(0, 0, 0), radius * coeffs[2 * i + 1]);
 
-                Gizmos.DrawIcon((matInternal * Matrix4x4.Translate(edges[i] * 0.5f)).MultiplyPoint(new Vector4(0, -2 * radius, 0)), "sound_icon_" + i + ".png", true);
+                Gizmos.DrawIcon((matInternal * Matrix4x4.Translate(points[i] * 0.5f)).MultiplyPoint(new Vector4(0, -2 * radius, 0)), "sound_icon_" + i + ".png", true);
             }
 
         }
@@ -499,108 +499,6 @@ public class M1Base : MonoBehaviour
         return (audioSourceBlend != null && audioSourceBlend.Length > 0 && audioSourceBlend[0].isPlaying) || (audioSourceMain != null && audioSourceMain[0].isPlaying);
     }
 
-    public static float ClosestPointOnBox(Vector3 point, Vector3 center, Vector3 axis0, Vector3 axis1, Vector3 axis2, Vector3 extents, out Vector3 closestPoint)
-    {
-        Vector3 vector = point - center;
-        float num = 0f;
-
-        float num0 = Vector3.Dot(vector, axis0);
-        if (num0 < -extents.x)
-        {
-            num += Mathf.Pow(num0 + extents.x, 2);
-            num0 = -extents.x;
-        }
-        else if (num0 > extents.x)
-        {
-            num += Mathf.Pow(num0 - extents.x, 2);
-            num0 = extents.x;
-        }
-
-        float num1 = Vector3.Dot(vector, axis1);
-        if (num1 < -extents.y)
-        {
-            num += Mathf.Pow(num1 + extents.y, 2);
-            num1 = -extents.y;
-        }
-        else if (num1 > extents.y)
-        {
-            num += Mathf.Pow(num1 - extents.y, 2);
-            num1 = extents.y;
-        }
-
-        float num2 = Vector3.Dot(vector, axis2);
-        if (num2 < -extents.z)
-        {
-            num += Mathf.Pow(num2 + extents.z, 2);
-            num2 = -extents.z;
-        }
-        else if (num2 > extents.z)
-        {
-            num += Mathf.Pow(num2 - extents.z, 2);
-            num2 = extents.z;
-        }
-        closestPoint = center + num0 * axis0 + num1 * axis1 + num2 * axis2;
-
-        return Mathf.Sqrt(num);
-    }
-
-
-    private static bool Clip(float denom, float numer, ref float t0, ref float t1)
-    {
-        if ((double)denom > 0.0)
-        {
-            if ((double)numer > (double)denom * (double)t1)
-                return false;
-            if ((double)numer > (double)denom * (double)t0)
-                t0 = numer / denom;
-            return true;
-        }
-        if ((double)denom >= 0.0)
-            return (double)numer <= 0.0;
-        if ((double)numer > (double)denom * (double)t0)
-            return false;
-        if ((double)numer > (double)denom * (double)t1)
-            t1 = numer / denom;
-        return true;
-    }
-
-    private static int DoClipping(float t0, float t1, Vector3 origin, Vector3 direction, Vector3 center, Vector3 axis0, Vector3 axis1, Vector3 axis2, Vector3 extents, bool solid, out Vector3 point0, out Vector3 point1)
-    {
-        Vector3 vector = origin - center;
-        Vector3 vector2 = new Vector3(Vector3.Dot(vector, axis0), Vector3.Dot(vector, axis1), Vector3.Dot(vector, axis2));
-        Vector3 vector3 = new Vector3(Vector3.Dot(direction, axis0), Vector3.Dot(direction, axis1), Vector3.Dot(direction, axis2));
-
-        float num = t0;
-        float num2 = t1;
-
-        int quantity = 0;
-
-        bool flag = Clip(vector3.x, -vector2.x - extents.x, ref t0, ref t1) && Clip(-vector3.x, vector2.x - extents.x, ref t0, ref t1) && Clip(vector3.y, -vector2.y - extents.y, ref t0, ref t1) && Clip(-vector3.y, vector2.y - extents.y, ref t0, ref t1) && Clip(vector3.z, -vector2.z - extents.z, ref t0, ref t1) && Clip(-vector3.z, vector2.z - extents.z, ref t0, ref t1);
-        if (flag && (solid || t0 != num || t1 != num2))
-        {
-            if (t1 > t0)
-            {
-                quantity = 2;
-                point0 = origin + t0 * direction;
-                point1 = origin + t1 * direction;
-            }
-            else
-            {
-                quantity = 1;
-                point0 = origin + t0 * direction;
-                point1 = Vector3.zero;
-            }
-        }
-        else
-        {
-            quantity = 0;
-            point0 = Vector3.zero;
-            point1 = Vector3.zero;
-        }
-
-        return quantity;
-    }
-
 
     public string ToStringFormat(Vector3 v)
     {
@@ -613,37 +511,6 @@ public class M1Base : MonoBehaviour
         string fmt = "0.0000";
         return "( " + q.x.ToString(fmt) + ", " + q.y.ToString(fmt) + ", " + q.z.ToString(fmt) + ", " + q.w.ToString(fmt) + " )";
     }
-
-    public Vector3 GetEuler(Quaternion q1)
-    {
-        float test = q1.x * q1.y + q1.z * q1.w;
-        if (test > 0.499) // singularity at north pole
-        {
-            return new Vector3(
-                0,
-                2 * Mathf.Atan2(q1.x, q1.w),
-                Mathf.PI / 2
-            ) * Mathf.Rad2Deg;
-        }
-        if (test < -0.499) // singularity at south pole
-        {
-            return new Vector3(
-                0,
-                -2 * Mathf.Atan2(q1.x, q1.w),
-                -Mathf.PI / 2
-            ) * Mathf.Rad2Deg;
-        }
-        float sqx = q1.x * q1.x;
-        float sqy = q1.y * q1.y;
-        float sqz = q1.z * q1.z;
-
-        return new Vector3(
-            Mathf.Atan2(2.0f * q1.x * q1.w - 2 * q1.y * q1.z, 1.0f - 2.0f * sqx - 2.0f * sqz),
-            Mathf.Atan2(2.0f * q1.y * q1.w - 2 * q1.x * q1.z, 1.0f - 2.0f * sqy - 2.0f * sqz),
-            Mathf.Sin(2.0f * test)
-        ) * Mathf.Rad2Deg;
-    }
-
 
     // Update is called once per frame
     void Update()
@@ -720,9 +587,10 @@ public class M1Base : MonoBehaviour
             {
                 // Compute rotation for sound
                 Mach1.Mach1Point3D angles = m1Positional.getCoefficientsRotation();
-                matInternal = Matrix4x4.TRS(audiolistener.transform.position, Quaternion.Euler(angles.x, angles.y, angles.z), new Vector3(1, 1, 1)) * Matrix4x4.Rotate(Quaternion.Inverse(audiolistener.transform.rotation));
+                matInternal = Matrix4x4.TRS(audiolistener.transform.position, Quaternion.Inverse(Quaternion.Euler(angles.x, angles.y, angles.z)   * Quaternion.Inverse(audiolistener.transform.rotation)), new Vector3(1, 1, 1));
 
-                Debug.Log("M1Obj Euler Rotation Angles: " + m1Positional.getCoefficientsRotation().x + " , " + m1Positional.getCoefficientsRotation().y + " , " + m1Positional.getCoefficientsRotation().z);
+                Mach1.Mach1Point3D anglesInternal = m1Positional.getCoefficientsRotationInternal();
+                Debug.Log("M1Obj Euler Rotation Angles: " + anglesInternal.x + " , " + anglesInternal.y + " , " + anglesInternal.z);
                 Debug.Log("M1Obj Distance: " + m1Positional.getDist());
 
                 string str = "Returned Coefficients: ";
