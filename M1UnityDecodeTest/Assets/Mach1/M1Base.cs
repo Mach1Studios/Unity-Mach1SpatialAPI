@@ -31,7 +31,6 @@ public class M1Base : MonoBehaviour
     private AudioSource[] audioSourceMain;
 
     private int MAX_SOUNDS_PER_CHANNEL;
-    private Matrix4x4 mat;
     private Matrix4x4 matInternal;
 
     [Header("Point / Plane Setting")]
@@ -228,12 +227,6 @@ public class M1Base : MonoBehaviour
             Gizmos.matrix = gameObject.transform.localToWorldMatrix;
             Gizmos.DrawWireCube(new Vector3(0, 0, 0), new Vector3(1, 1, 1));
 
-            /*
-            Gizmos.color = Color.magenta;
-            Gizmos.matrix = mat;
-            Gizmos.DrawWireCube(new Vector3(0, 0, 0), new Vector3(1, 1, 1));
-            */
-
             Gizmos.color = Color.yellow;
             Gizmos.matrix = matInternal;
             Gizmos.DrawWireCube(new Vector3(0, 0, 0), new Vector3(1, 1, 1));
@@ -253,7 +246,10 @@ public class M1Base : MonoBehaviour
 
             for (int i = 0; i < 8; i++)
             {
-                points[i] = new Vector3(points[i].x, points[i].z, points[i].y);
+                float _x = points[i].x;
+                float _y = points[i].z;
+                float _z = points[i].y;
+                points[i] = new Vector3(_x, _y, _z);
 
                 Gizmos.color = Color.red;
                 Gizmos.matrix = matInternal * (Matrix4x4.Translate(new Vector3(-radius, 0, 0)) * Matrix4x4.Translate(points[i] * 0.5f));
@@ -512,6 +508,72 @@ public class M1Base : MonoBehaviour
         return "( " + q.x.ToString(fmt) + ", " + q.y.ToString(fmt) + ", " + q.z.ToString(fmt) + ", " + q.w.ToString(fmt) + " )";
     }
 
+
+
+
+    public static Vector3 QuaternionToEuler(Quaternion q)
+    {
+        Vector3 euler;
+
+        // if the input quaternion is normalized, this is exactly one. Otherwise, this acts as a correction factor for the quaternion's not-normalizedness
+        float unit = (q.x * q.x) + (q.y * q.y) + (q.z * q.z) + (q.w * q.w);
+
+        // this will have a magnitude of 0.5 or greater if and only if this is a singularity case
+        float test = q.x * q.w - q.y * q.z;
+
+        if (test > 0.499999f * unit) // singularity at north pole
+        {
+            euler.y = -Mathf.PI / 2;
+            euler.x = 2f * Mathf.Atan2(q.y, q.x);
+            euler.z = 0;
+        }
+        else if (test < -0.499999f * unit) // singularity at south pole
+        {
+            euler.y = Mathf.PI / 2;
+            euler.x = -2f * Mathf.Atan2(q.y, q.x);
+            euler.z = 0;
+        }
+        else // no singularity - this is the majority of cases
+        {
+            euler.y = -Mathf.Asin(2f * (q.w * q.x - q.y * q.z));
+            euler.x = Mathf.Atan2(2f * q.w * q.y + 2f * q.z * q.x, 1 - 2f * (q.x * q.x + q.y * q.y));
+            euler.z = Mathf.Atan2(2f * q.w * q.z + 2f * q.x * q.y, 1 - 2f * (q.z * q.z + q.x * q.x));
+        }
+
+        // all the math so far has been done in radians. Before returning, we convert to degrees...
+        euler *= Mathf.Rad2Deg;
+
+        //...and then ensure the degree values are between 0 and 360
+        euler.x %= 360;
+        euler.y %= 360;
+        euler.z %= 360;
+
+        return euler;
+    }
+
+    public static Quaternion EulerToQuaternion(Vector3 euler)
+    {
+        float xOver2 = -euler.y * Mathf.Deg2Rad * 0.5f;
+        float yOver2 = euler.x * Mathf.Deg2Rad * 0.5f;
+        float zOver2 = euler.z * Mathf.Deg2Rad * 0.5f;
+
+        float sinXOver2 = Mathf.Sin(xOver2);
+        float cosXOver2 = Mathf.Cos(xOver2);
+        float sinYOver2 = Mathf.Sin(yOver2);
+        float cosYOver2 = Mathf.Cos(yOver2);
+        float sinZOver2 = Mathf.Sin(zOver2);
+        float cosZOver2 = Mathf.Cos(zOver2);
+
+        Quaternion result;
+        result.x = cosYOver2 * sinXOver2 * cosZOver2 + sinYOver2 * cosXOver2 * sinZOver2;
+        result.y = sinYOver2 * cosXOver2 * cosZOver2 - cosYOver2 * sinXOver2 * sinZOver2;
+        result.z = cosYOver2 * cosXOver2 * sinZOver2 - sinYOver2 * sinXOver2 * cosZOver2;
+        result.w = cosYOver2 * cosXOver2 * cosZOver2 + sinYOver2 * sinXOver2 * sinZOver2;
+
+        return result;
+    }
+
+
     // Update is called once per frame
     void Update()
     {
@@ -556,9 +618,15 @@ public class M1Base : MonoBehaviour
             m1Positional.setUsePitchForRotation(usePitchForRotation);
             m1Positional.setUseRollForRotation(useRollForRotation);
             m1Positional.setListenerPosition(ConvertToMach1Point3D(audiolistener.transform.position));
+            
             m1Positional.setListenerRotationQuat(ConvertToMach1Point4D(audiolistener.transform.rotation));
+            //m1Positional.setListenerRotation(ConvertToMach1Point3D(audiolistener.transform.rotation.eulerAngles));
+
             m1Positional.setDecoderAlgoPosition(ConvertToMach1Point3D(gameObject.transform.position));
+
             m1Positional.setDecoderAlgoRotationQuat(ConvertToMach1Point4D(gameObject.transform.rotation));
+            //m1Positional.setDecoderAlgoRotation(ConvertToMach1Point3D(gameObject.transform.rotation.eulerAngles));
+
             m1Positional.setDecoderAlgoScale(ConvertToMach1Point3D(gameObject.transform.lossyScale));
             m1Positional.evaluatePositionResults();
 
@@ -585,11 +653,10 @@ public class M1Base : MonoBehaviour
 
             if (debug)
             {
-                // Compute rotation for sound
-                Mach1.Mach1Point3D angles = m1Positional.getCoefficientsRotation();
-                matInternal = Matrix4x4.TRS(audiolistener.transform.position, Quaternion.Inverse(Quaternion.Euler(angles.x, angles.y, angles.z)   * Quaternion.Inverse(audiolistener.transform.rotation)), new Vector3(1, 1, 1));
+                Mach1.Mach1Point3D anglesCube = m1Positional.getPositionalRotation();
+                matInternal = Matrix4x4.TRS(audiolistener.transform.position, Quaternion.Euler(anglesCube.x, anglesCube.y, anglesCube.z), new Vector3(1, 1, 1));
 
-                Mach1.Mach1Point3D anglesInternal = m1Positional.getCoefficientsRotationInternal();
+                Mach1.Mach1Point3D anglesInternal = m1Positional.getCurrentAngleInternal();
                 Debug.Log("M1Obj Euler Rotation Angles: " + anglesInternal.x + " , " + anglesInternal.y + " , " + anglesInternal.z);
                 Debug.Log("M1Obj Distance: " + m1Positional.getDist());
 
@@ -610,7 +677,7 @@ public class M1Base : MonoBehaviour
             }
 
             // Mach1.Mach1Point3D angles = m1Positional.getCoefficientsRotation();
-            //Debug.Log("volumeWalls: " + coeffs + " , " + "volumeRoom" + coeffsInterior);
+            // Debug.Log("volumeWalls: " + coeffs + " , " + "volumeRoom" + coeffsInterior);
             // Debug.Log("d: " + dist + ", d2: " + m1Positional.getDist());
 
             if (drawHelpers) 
