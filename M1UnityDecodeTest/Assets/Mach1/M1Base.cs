@@ -246,20 +246,17 @@ public class M1Base : MonoBehaviour
 
             for (int i = 0; i < 8; i++)
             {
-                float _x = points[i].x;
-                float _y = points[i].z;
-                float _z = points[i].y;
-                points[i] = new Vector3(_x, _y, _z);
+                Vector3 point = new Vector3(points[i].x, points[i].z, points[i].y); // convert to glm 
 
                 Gizmos.color = Color.red;
-                Gizmos.matrix = matInternal * (Matrix4x4.Translate(new Vector3(-radius, 0, 0)) * Matrix4x4.Translate(points[i] * 0.5f));
+                Gizmos.matrix = matInternal * (Matrix4x4.Translate(new Vector3(-radius, 0, 0)) * Matrix4x4.Translate(point * 0.5f));
                 Gizmos.DrawSphere(new Vector3(0, 0, 0), radius * coeffs[2 * i]);
 
                 Gizmos.color = Color.blue;
-                Gizmos.matrix = matInternal * (Matrix4x4.Translate(new Vector3(radius, 0, 0)) * Matrix4x4.Translate(points[i] * 0.5f));
+                Gizmos.matrix = matInternal * (Matrix4x4.Translate(new Vector3(radius, 0, 0)) * Matrix4x4.Translate(point * 0.5f));
                 Gizmos.DrawSphere(new Vector3(0, 0, 0), radius * coeffs[2 * i + 1]);
 
-                Gizmos.DrawIcon((matInternal * Matrix4x4.Translate(points[i] * 0.5f)).MultiplyPoint(new Vector4(0, -2 * radius, 0)), "sound_icon_" + i + ".png", true);
+                Gizmos.DrawIcon((matInternal * Matrix4x4.Translate(point * 0.5f)).MultiplyPoint(new Vector4(0, -2 * radius, 0)), "sound_icon_" + i + ".png", true);
             }
 
         }
