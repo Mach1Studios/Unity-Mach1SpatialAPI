@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.Audio;
 using System.Collections;
 using System.IO;
+using UnityEngine.Networking;
 
 public class M1Base : MonoBehaviour
 {
@@ -246,17 +247,20 @@ public class M1Base : MonoBehaviour
 
             for (int i = 0; i < 8; i++)
             {
-                Vector3 point = new Vector3(points[i].x, points[i].z, points[i].y); // convert to glm 
+                float _x = points[i].x;
+                float _y = points[i].z;
+                float _z = points[i].y;
+                points[i] = new Vector3(_x, _y, _z);
 
                 Gizmos.color = Color.red;
-                Gizmos.matrix = matInternal * (Matrix4x4.Translate(new Vector3(-radius, 0, 0)) * Matrix4x4.Translate(point * 0.5f));
+                Gizmos.matrix = matInternal * (Matrix4x4.Translate(new Vector3(-radius, 0, 0)) * Matrix4x4.Translate(points[i] * 0.5f));
                 Gizmos.DrawSphere(new Vector3(0, 0, 0), radius * coeffs[2 * i]);
 
                 Gizmos.color = Color.blue;
-                Gizmos.matrix = matInternal * (Matrix4x4.Translate(new Vector3(radius, 0, 0)) * Matrix4x4.Translate(point * 0.5f));
+                Gizmos.matrix = matInternal * (Matrix4x4.Translate(new Vector3(radius, 0, 0)) * Matrix4x4.Translate(points[i] * 0.5f));
                 Gizmos.DrawSphere(new Vector3(0, 0, 0), radius * coeffs[2 * i + 1]);
 
-                Gizmos.DrawIcon((matInternal * Matrix4x4.Translate(point * 0.5f)).MultiplyPoint(new Vector4(0, -2 * radius, 0)), "sound_icon_" + i + ".png", true);
+                Gizmos.DrawIcon((matInternal * Matrix4x4.Translate(points[i] * 0.5f)).MultiplyPoint(new Vector4(0, -2 * radius, 0)), "sound_icon_" + i + ".png", true);
             }
 
         }
@@ -306,16 +310,18 @@ public class M1Base : MonoBehaviour
             url = url.Replace("$STREAMINGASSETS", GetStreamingAssetsPath());
 
             //Debug.Log ("load audio : " + url);
+            using (UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip(url, AudioType.UNKNOWN))
+            {
+                yield return www.SendWebRequest();
 
-            WWW www = new WWW(url);
-            yield return www;
-            if (www.error == null)
-            {
-                clip = www.GetAudioClip(false, false);
-            }
-            else
-            {
-                Debug.Log("WWW Error: " + www.error + " (" + url + ")");
+                if (www.result != UnityWebRequest.Result.Success)
+                {
+                    Debug.Log("WWW Error: " + www.error + " (" + url + ")");
+                }
+                else
+                {
+                    clip = DownloadHandlerAudioClip.GetContent(www);
+                }
             }
         }
 
