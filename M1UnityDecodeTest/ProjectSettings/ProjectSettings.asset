@@ -140,7 +140,10 @@ PlayerSettings:
   visionOSBundleVersion: 1.0
   tvOSBundleVersion: 1.0
   bundleVersion: 1.0
-  preloadedAssets: []
+  preloadedAssets:
+  - {fileID: 3071949918400103044, guid: 1a3900c97e8312447989b707e300fe5d, type: 2}
+  - {fileID: 6098917921231486242, guid: 3d737fe220a611545b282a0eb44d20f8, type: 2}
+  - {fileID: 11400000, guid: bc86c39df506f91498cc27c2274afcbd, type: 2}
   metroInputSource: 0
   wsaTransparentSwapchain: 0
   m_HolographicPauseOnTrackingLoss: 1
@@ -161,7 +164,7 @@ PlayerSettings:
   androidSupportedAspectRatio: 1
   androidMaxAspectRatio: 2.1
   applicationIdentifier:
-    Android: com.mach1.testPlugin
+    Android: com.Mach1.M1UnityDemos
   buildNumber:
     Standalone: 0
     VisionOS: 0
@@ -428,7 +431,7 @@ PlayerSettings:
     m_Automatic: 1
   - m_BuildTarget: AndroidPlayer
     m_APIs: 0b00000008000000
-    m_Automatic: 0
+    m_Automatic: 1
   m_BuildTargetVRSettings: []
   m_DefaultShaderChunkSizeInMB: 16
   m_DefaultShaderChunkCount: 0
