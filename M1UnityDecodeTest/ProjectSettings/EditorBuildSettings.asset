@@ -5,7 +5,10 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
+    path: Assets/Mach1/Scenes/m1decode_desktop_example.unity
+    guid: 8eacbd2680021ff4ca5725bb0142ce2e
+  - enabled: 0
     path: Assets/Mach1/Scenes/m1decode_quest_example.unity
     guid: 1e569beadbc2d5541b8e96b66b96b821
   m_configObjects:
