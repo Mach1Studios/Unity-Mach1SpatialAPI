@@ -21,6 +21,7 @@ public class M1Base : MonoBehaviour
 
     [Header("Asset Load/Play Settings")]
     public bool autoPlay = false;
+    public bool playOnAwake = false;
     public bool isLoop = false;
     public bool loadAudioOnStart = true;
     private bool isPlaying = false;
@@ -329,18 +330,18 @@ public class M1Base : MonoBehaviour
         {
             if (!room && audioSourceMain != null && audioSourceMain.Length > n * 2 + 1)
             {
-                audioSourceMain[n * 2] = AddAudio(clip, isLoop, true, 1.0f);
+                audioSourceMain[n * 2] = AddAudio(clip, isLoop, playOnAwake, 1.0f);
                 audioSourceMain[n * 2].panStereo = -1;
 
-                audioSourceMain[n * 2 + 1] = AddAudio(clip, isLoop, true, 1.0f);
+                audioSourceMain[n * 2 + 1] = AddAudio(clip, isLoop, playOnAwake, 1.0f);
                 audioSourceMain[n * 2 + 1].panStereo = 1;
             }
             else if (audioSourceBlend != null && audioSourceBlend.Length > n * 2 + 1)
             {
-                audioSourceBlend[n * 2] = AddAudio(clip, isLoop, true, 1.0f);
+                audioSourceBlend[n * 2] = AddAudio(clip, isLoop, playOnAwake, 1.0f);
                 audioSourceBlend[n * 2].panStereo = -1;
 
-                audioSourceBlend[n * 2 + 1] = AddAudio(clip, isLoop, true, 1.0f);
+                audioSourceBlend[n * 2 + 1] = AddAudio(clip, isLoop, playOnAwake, 1.0f);
                 audioSourceBlend[n * 2 + 1].panStereo = 1;
             }
         }
@@ -459,14 +460,79 @@ public class M1Base : MonoBehaviour
     public void Seek(float timeInSeconds)
     {
         if (audioSourceBlend != null)
+        {
             foreach (AudioSource source in audioSourceBlend)
-                if (source != null)
-                    source.time = timeInSeconds;
+            {
+                if (source != null && source.clip != null)
+                {
+                    if (timeInSeconds > source.clip.length)
+                    {
+                        source.time = source.clip.length;
+                    }
+                    else
+                    {
+                        source.time = timeInSeconds;
+                    }
+                }
+            }
+        }
 
         if (audioSourceMain != null)
+        {
             foreach (AudioSource source in audioSourceMain)
-                if (source != null)
-                    source.time = timeInSeconds;
+            {
+                if (source != null && source.clip != null)
+                {
+                    if (timeInSeconds > source.clip.length)
+                    {
+                        source.time = source.clip.length;
+                    }
+                    else
+                    {
+                        source.time = timeInSeconds;
+                    }
+                }
+            }
+        }
+    }
+
+    public void SeekInSamples(int timeInSamples)
+    {
+        if (audioSourceBlend != null)
+        {
+            foreach (AudioSource source in audioSourceBlend)
+            {
+                if (source != null && source.clip != null)
+                {
+                    if (timeInSamples > source.clip.length)
+                    {
+                        source.timeSamples = source.clip.samples;
+                    }
+                    else
+                    {
+                        source.timeSamples = timeInSamples;
+                    }
+                }
+            }
+        }
+
+        if (audioSourceMain != null)
+        {
+            foreach (AudioSource source in audioSourceMain)
+            {
+                if (source != null && source.clip != null)
+                {
+                    if (timeInSamples > source.clip.length)
+                    {
+                        source.timeSamples = source.clip.samples;
+                    }
+                    else
+                    {
+                        source.timeSamples = timeInSamples;
+                    }
+                }
+            }
+        }
     }
 
     public AudioSource[] GetAudioSourceMain()
@@ -490,6 +556,13 @@ public class M1Base : MonoBehaviour
     {
         if (audioSourceBlend != null && audioSourceBlend.Length > 0) return audioSourceBlend[0].clip.length;
         else if (audioSourceMain != null && audioSourceMain.Length > 0) return audioSourceMain[0].clip.length;
+        return 0;
+    }
+
+    public int GetSampleRate()
+    {
+        if (audioSourceBlend != null && audioSourceBlend.Length > 0) return (int)Mathf.Round(audioSourceBlend[0].clip.samples / audioSourceBlend[0].clip.length);
+        else if (audioSourceMain != null && audioSourceMain.Length > 0) return (int)Mathf.Round(audioSourceMain[0].clip.samples / audioSourceMain[0].clip.length);
         return 0;
     }
 

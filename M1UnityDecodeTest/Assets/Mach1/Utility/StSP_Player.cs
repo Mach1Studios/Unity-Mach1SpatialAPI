@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Audio;
 
@@ -19,18 +20,40 @@ public class StSP_Player : MonoBehaviour
     [Header("Debug Inspector:")]
     public float _currentTime;
 
-    private AudioSource mono_source;
-    private AudioSource stereo_source;
+    [Header("Override Audio Sources:")]
+    public AudioSource mono_source;
+    public AudioSource stereo_source;
 
     // Start is called before the first frame update
     void Start()
     {
+        // assign private generated audio sources
+        AudioSource[] audioSources = GetComponents<AudioSource>();
+        if (mono_source != null )
+        {
+            mono_source = audioSources[0];
+        }
+        if (stereo_source != null )
+        {
+            stereo_source = audioSources[1];
+        }
+
         // assign mixer groups
-        mono_source.outputAudioMixerGroup = audioMixerGroup;
-        stereo_source.outputAudioMixerGroup = audioMixerGroup;
+        if (audioMixerGroup != null)
+        {
+            mono_source.outputAudioMixerGroup = audioMixerGroup;
+            stereo_source.outputAudioMixerGroup = audioMixerGroup;
+        }
+
         // assign audio clips to sources
-        mono_source.clip = monoSpatialClip;
-        stereo_source.clip = stereoStaticClip;
+        if (monoSpatialClip != null)
+        {
+            mono_source.clip = monoSpatialClip;
+        }
+        if (stereoStaticClip != null)
+        {
+            stereo_source.clip = stereoStaticClip;
+        }
 
         // mono settings
         mono_source.spatialize = true;
@@ -45,7 +68,10 @@ public class StSP_Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        _currentTime = mono_source.time;
+        if (mono_source != null)
+        {
+            _currentTime = mono_source.time;
+        }
     }
 
     public void Play()
