@@ -25,6 +25,7 @@ public class M1Base : MonoBehaviour
     public bool isLoop = false;
     public bool loadAudioOnStart = true;
     private bool isPlaying = false;
+    [SerializeField, Range(0f, 1f)] private float outputGain = 1.0f;
 
     [Header("Attenuation Settings")]
     public bool useAttenuation = false;
@@ -45,6 +46,8 @@ public class M1Base : MonoBehaviour
     public bool useYawForRotation = true;
     public bool usePitchForRotation = true;
     public bool useRollForRotation = true;
+
+    public bool useRotationOffset = false;
 
     public bool drawHelpers = false;
     public bool debug = false;
@@ -114,8 +117,14 @@ public class M1Base : MonoBehaviour
         this.MAX_SOUNDS_PER_CHANNEL = MAX_SOUNDS_PER_CHANNEL;
 
         // Falloff
-        attenuationCurve = generateCurve(10);
-        attenuationCurveBlendMode = generateCurve(1);
+        if (attenuationCurve == null)
+        {
+            attenuationCurve = generateCurve(10);
+        }
+        if (attenuationCurveBlendMode == null)
+        {
+            attenuationCurveBlendMode = generateCurve(1);
+        }
 
         // Init filenames
         externalAudioFilenameMain = new string[MAX_SOUNDS_PER_CHANNEL];
@@ -211,7 +220,7 @@ public class M1Base : MonoBehaviour
         source.clip = clip;
         source.loop = loop;
         source.playOnAwake = playAwake;
-        source.volume = vol;
+        source.volume = vol * outputGain;
         source.priority = 0;
         source.spatialize = false;
         source.outputAudioMixerGroup = m1SpatialAudioMixerGroup;
@@ -535,6 +544,11 @@ public class M1Base : MonoBehaviour
         }
     }
 
+    public void setoutputGainMultiplier(float vol)
+    {
+        outputGain = vol;
+    }
+
     public AudioSource[] GetAudioSourceMain()
     {
         return audioSourceMain;
@@ -571,7 +585,6 @@ public class M1Base : MonoBehaviour
         return (audioSourceBlend != null && audioSourceBlend.Length > 0 && audioSourceBlend[0].isPlaying) || (audioSourceMain != null && audioSourceMain[0].isPlaying);
     }
 
-
     public string ToStringFormat(Vector3 v)
     {
         string fmt = "0.0000";
@@ -583,9 +596,6 @@ public class M1Base : MonoBehaviour
         string fmt = "0.0000";
         return "( " + q.x.ToString(fmt) + ", " + q.y.ToString(fmt) + ", " + q.z.ToString(fmt) + ", " + q.w.ToString(fmt) + " )";
     }
-
-
-
 
     public static Vector3 QuaternionToEuler(Quaternion q)
     {
@@ -649,7 +659,6 @@ public class M1Base : MonoBehaviour
         return result;
     }
 
-
     // Update is called once per frame
     void Update()
     {
@@ -683,7 +692,7 @@ public class M1Base : MonoBehaviour
 
             // In order to use values set in Unity's object inspector, we have to put them into an
             // M1 Positional library instance. Here's an example:
-            // /*
+
             m1Positional.setUseBlendMode(useBlendMode);
             m1Positional.setIgnoreTopBottom(ignoreTopBottom);
             m1Positional.setMuteWhenOutsideObject(muteWhenOutsideObject);
@@ -699,9 +708,15 @@ public class M1Base : MonoBehaviour
             //m1Positional.setListenerRotation(ConvertToMach1Point3D(audiolistener.transform.rotation.eulerAngles));
 
             m1Positional.setDecoderAlgoPosition(ConvertToMach1Point3D(gameObject.transform.position));
-
-            m1Positional.setDecoderAlgoRotationQuat(ConvertToMach1Point4D(gameObject.transform.rotation));
-            //m1Positional.setDecoderAlgoRotation(ConvertToMach1Point3D(gameObject.transform.rotation.eulerAngles));
+            // Allow use of GameObject's transform.rotation as an additional offset rotator for the Decode API
+            if (useRotationOffset)
+            {
+                m1Positional.setDecoderAlgoRotationQuat(ConvertToMach1Point4D(gameObject.transform.rotation));
+            } else
+            {
+                // This allows us to treat the GameObject as a point instead of using its shape as an additional rotator
+                m1Positional.setDecoderAlgoRotation(ConvertToMach1Point3D(new Vector3(0.0f, 0.0f, 0.0f)));
+            }
 
             m1Positional.setDecoderAlgoScale(ConvertToMach1Point3D(gameObject.transform.lossyScale));
             m1Positional.evaluatePositionResults();
@@ -715,7 +730,7 @@ public class M1Base : MonoBehaviour
             m1Positional.getCoefficients(ref coeffs);
             for (int i = 0; i < audioSourceMain.Length; i++)
             {
-                audioSourceMain[i].volume = coeffs[i];
+                audioSourceMain[i].volume = coeffs[i] * outputGain;
             }
 
             if (useBlendMode)
@@ -723,7 +738,7 @@ public class M1Base : MonoBehaviour
                 m1Positional.getCoefficientsInterior(ref coeffsInterior);
                 for (int i = 0; i < audioSourceBlend.Length; i++)
                 {
-                    audioSourceBlend[i].volume = coeffsInterior[i];
+                    audioSourceBlend[i].volume = coeffsInterior[i] * outputGain;
                 }
             }
 

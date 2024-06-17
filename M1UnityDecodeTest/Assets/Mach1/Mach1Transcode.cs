@@ -11,7 +11,7 @@ namespace Mach1
     {
 #if UNITY_IOS && !UNITY_EDITOR
         internal const string libname = "__Internal";
-#elif UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+#elif UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_ANDROID
         internal const string libname = "Mach1TranscodeCAPI";
 #else
         internal const string libname = "libMach1TranscodeCAPI";
