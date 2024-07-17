@@ -79,7 +79,7 @@ public class StSP_Player : MonoBehaviour
         {
             mono_source.Play();
             stereo_source.Play();
-            if (showDebug) Debug.Log("[AUDIO] Played");
+            if (showDebug) Debug.Log($"[AUDIO] Played on {gameObject.name}");
         }
     }
 
@@ -89,7 +89,7 @@ public class StSP_Player : MonoBehaviour
         {
             mono_source.Stop();
             stereo_source.Stop();
-            if (showDebug) Debug.Log("[AUDIO] Stopped");
+            if (showDebug) Debug.Log($"[AUDIO] Stopped on {gameObject.name}");
         }
     }
  
@@ -100,7 +100,7 @@ public class StSP_Player : MonoBehaviour
             _currentTime = mono_source.time;
             mono_source.Pause();
             stereo_source.Pause();
-            if (showDebug) Debug.Log("[AUDIO] Paused at "+_currentTime);
+            if (showDebug) Debug.Log($"[AUDIO] Paused on {gameObject.name} at {_currentTime}");
         }
     }
  
@@ -110,7 +110,7 @@ public class StSP_Player : MonoBehaviour
         {
             mono_source.UnPause();
             stereo_source.UnPause();
-            if (showDebug) Debug.Log("[AUDIO] UnPaused at "+_currentTime);
+            if (showDebug) Debug.Log($"[AUDIO] UnPaused on {gameObject.name} at {_currentTime}");
         }
     }
 
