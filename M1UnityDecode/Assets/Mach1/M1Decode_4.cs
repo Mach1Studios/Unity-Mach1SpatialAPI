@@ -13,6 +13,6 @@ public class M1HorizonDecode : M1Base
     public M1HorizonDecode()
     {
         InitComponents(4);
-        m1Positional.setDecodeAlgoType(Mach1.Mach1DecodeAlgoType.Mach1DecodeAlgoHorizon_4);
+        m1Positional.setDecodeMode(Mach1.Mach1DecodeMode.M1DecodeSpatial_4);
     }
 }

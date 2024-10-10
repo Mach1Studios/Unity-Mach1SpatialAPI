@@ -12,8 +12,8 @@ public class M1SpatialDecode : M1Base
 {
     public M1SpatialDecode()
     {
-        // TODO: Allow selectable usage of all Mach1DecodeAlgoType
+        // TODO: Allow selectable usage of all Mach1DecodeMode
         InitComponents(8);
-        m1Positional.setDecodeAlgoType(Mach1.Mach1DecodeAlgoType.Mach1DecodeAlgoSpatial_8);
+        m1Positional.setDecodeMode(Mach1.Mach1DecodeMode.M1DecodeSpatial_8);
     }
 }

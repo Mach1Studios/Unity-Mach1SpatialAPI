@@ -98,13 +98,6 @@ public class M1DecodeTrigger : MonoBehaviour
                     audioSource.timeSamples = timeSamples;
                 }
             }
-            if (m1obj.GetAudioSourceBlend() != null)
-            {
-                foreach (var audioSource in m1obj.GetAudioSourceBlend())
-                {
-                    audioSource.timeSamples = timeSamples;
-                }
-            }
         }
     }
 

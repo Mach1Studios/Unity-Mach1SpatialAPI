@@ -52,16 +52,7 @@ public class M1Base : MonoBehaviour
     public bool drawHelpers = false;
     public bool debug = false;
 
-    [Header("Experimental BlendMode")]
-    public bool useBlendMode = false;
-    public AudioClip[] audioClipBlend;
-    public string[] externalAudioFilenameBlend;
-    public AnimationCurve attenuationCurveBlendMode;
-    public bool ignoreTopBottom = true;
-    private AudioSource[] audioSourceBlend;
-
     private float[] coeffs;
-    private float[] coeffsInterior;
 
     private AudioListener audiolistener;
     private bool needToPlay;
@@ -107,8 +98,6 @@ public class M1Base : MonoBehaviour
     public M1Base()
     {
         coeffs = new float[18];
-        coeffsInterior = new float[18];
-
         m1Positional.setPlatformType(Mach1.Mach1PlatformType.Mach1PlatformUnity);
     }
 
@@ -121,23 +110,16 @@ public class M1Base : MonoBehaviour
         {
             attenuationCurve = generateCurve(10);
         }
-        if (attenuationCurveBlendMode == null)
-        {
-            attenuationCurveBlendMode = generateCurve(1);
-        }
 
         // Init filenames
         externalAudioFilenameMain = new string[MAX_SOUNDS_PER_CHANNEL];
-        externalAudioFilenameBlend = new string[MAX_SOUNDS_PER_CHANNEL];
         for (int i = 0; i < MAX_SOUNDS_PER_CHANNEL; i++)
         {
             externalAudioFilenameMain[i] = (i + 1) + ".wav";
-            externalAudioFilenameBlend[i] = (i + 1) + ".wav";
         }
 
         // audioClip
         audioClipMain = new AudioClip[MAX_SOUNDS_PER_CHANNEL];
-        audioClipBlend = new AudioClip[MAX_SOUNDS_PER_CHANNEL];
     }
 
     void Awake()
@@ -163,17 +145,6 @@ public class M1Base : MonoBehaviour
             StartCoroutine(LoadAudio(Path.Combine(externalAudioPath, i < externalAudioFilenameMain.Length ? externalAudioFilenameMain[i] : ""), false, i, isFromAssets));
         }
 
-        if (useBlendMode)
-        {
-            // Sounds
-            audioSourceBlend = new AudioSource[MAX_SOUNDS_PER_CHANNEL * 2];
-
-            for (int i = 0; i < Mathf.Max(externalAudioFilenameBlend.Length, audioClipBlend.Length); i++)
-            {
-                StartCoroutine(LoadAudio(Path.Combine(externalAudioPath, i < externalAudioFilenameBlend.Length ? externalAudioFilenameBlend[i] : ""), true, i, isFromAssets));
-            }
-        }
-
         isPlaying = false;
     }
 
@@ -185,21 +156,12 @@ public class M1Base : MonoBehaviour
             {
                 audioClipMain[i].UnloadAudioData();
             }
-
-            for (int i = 0; i < audioClipBlend.Length; i++)
-            {
-                audioClipBlend[i].UnloadAudioData();
-            }
         }
         else
         {
             for (int i = 0; i < audioClipMain.Length; i++)
             {
                 AudioClip.Destroy(audioClipMain[i]);
-            }
-            for (int i = 0; i < audioClipBlend.Length; i++)
-            {
-                AudioClip.Destroy(audioClipBlend[i]);
             }
         }
 
@@ -300,14 +262,7 @@ public class M1Base : MonoBehaviour
 
         if (isFromAssets)
         {   
-            if (!room)
-            {
-                clip = audioClipMain[n];// Resources.Load< AudioClip>(url);
-            }
-            else
-            {
-                clip = audioClipBlend[n];
-            }
+            clip = audioClipMain[n];// Resources.Load< AudioClip>(url);
 
             if(clip != null)
             { 
@@ -345,14 +300,6 @@ public class M1Base : MonoBehaviour
                 audioSourceMain[n * 2 + 1] = AddAudio(clip, isLoop, playOnAwake, 1.0f);
                 audioSourceMain[n * 2 + 1].panStereo = 1;
             }
-            else if (audioSourceBlend != null && audioSourceBlend.Length > n * 2 + 1)
-            {
-                audioSourceBlend[n * 2] = AddAudio(clip, isLoop, playOnAwake, 1.0f);
-                audioSourceBlend[n * 2].panStereo = -1;
-
-                audioSourceBlend[n * 2 + 1] = AddAudio(clip, isLoop, playOnAwake, 1.0f);
-                audioSourceBlend[n * 2 + 1].panStereo = 1;
-            }
         }
 
         yield break;
@@ -374,25 +321,7 @@ public class M1Base : MonoBehaviour
         }
         else isLoadedMain = false;
 
-
-        bool isLoadedBlend = true;
-        if (useBlendMode)
-        {
-            if (audioSourceBlend != null)
-            {
-                for (int i = 0; i < audioSourceBlend.Length; i++)
-                {
-                    if (!audioSourceBlend[i] || !audioSourceBlend[i].clip || audioSourceBlend[i].clip.loadState != AudioDataLoadState.Loaded)
-                    {
-                        isLoadedBlend = false;
-                        break;
-                    }
-                }
-            }
-            else isLoadedBlend = false;
-        }
-
-        return isLoadedMain && (useBlendMode ? isLoadedBlend : true);
+        return isLoadedMain;
     }
 
     public void PlayAudio()
@@ -411,14 +340,6 @@ public class M1Base : MonoBehaviour
                     audioSourceMain[i].Stop();
                 }
             }
-
-            if (useBlendMode && audioSourceBlend != null)
-            {
-                for (int i = 0; i < MAX_SOUNDS_PER_CHANNEL * 2; i++)
-                {
-                    audioSourceBlend[i].Stop();
-                }
-            }
         }
     }
 
@@ -431,14 +352,6 @@ public class M1Base : MonoBehaviour
                 for (int i = 0; i < MAX_SOUNDS_PER_CHANNEL * 2; i++)
                 {
                     audioSourceMain[i].Pause();
-                }
-            }
-
-            if (useBlendMode && audioSourceBlend != null)
-            {
-                for (int i = 0; i < MAX_SOUNDS_PER_CHANNEL * 2; i++)
-                {
-                    audioSourceBlend[i].Pause();
                 }
             }
         }
@@ -455,37 +368,11 @@ public class M1Base : MonoBehaviour
                     audioSourceMain[i].UnPause();
                 }
             }
-
-            if (useBlendMode && audioSourceBlend != null)
-            {
-                for (int i = 0; i < MAX_SOUNDS_PER_CHANNEL * 2; i++)
-                {
-                    audioSourceBlend[i].UnPause();
-                }
-            }
         }
     }
 
     public void Seek(float timeInSeconds)
     {
-        if (audioSourceBlend != null)
-        {
-            foreach (AudioSource source in audioSourceBlend)
-            {
-                if (source != null && source.clip != null)
-                {
-                    if (timeInSeconds > source.clip.length)
-                    {
-                        source.time = source.clip.length;
-                    }
-                    else
-                    {
-                        source.time = timeInSeconds;
-                    }
-                }
-            }
-        }
-
         if (audioSourceMain != null)
         {
             foreach (AudioSource source in audioSourceMain)
@@ -507,24 +394,6 @@ public class M1Base : MonoBehaviour
 
     public void SeekInSamples(int timeInSamples)
     {
-        if (audioSourceBlend != null)
-        {
-            foreach (AudioSource source in audioSourceBlend)
-            {
-                if (source != null && source.clip != null)
-                {
-                    if (timeInSamples > source.clip.length)
-                    {
-                        source.timeSamples = source.clip.samples;
-                    }
-                    else
-                    {
-                        source.timeSamples = timeInSamples;
-                    }
-                }
-            }
-        }
-
         if (audioSourceMain != null)
         {
             foreach (AudioSource source in audioSourceMain)
@@ -554,35 +423,27 @@ public class M1Base : MonoBehaviour
         return audioSourceMain;
     }
 
-    public AudioSource[] GetAudioSourceBlend()
-    {
-        return audioSourceBlend;
-    }
-
     public float GetPosition()
     {
-        if (audioSourceBlend != null && audioSourceBlend.Length > 0) return audioSourceBlend[0].time;
-        else if (audioSourceMain != null && audioSourceMain.Length > 0) return audioSourceMain[0].time;
+        if (audioSourceMain != null && audioSourceMain.Length > 0) return audioSourceMain[0].time;
         return 0;
     }
 
     public float GetDuration()
     {
-        if (audioSourceBlend != null && audioSourceBlend.Length > 0) return audioSourceBlend[0].clip.length;
-        else if (audioSourceMain != null && audioSourceMain.Length > 0) return audioSourceMain[0].clip.length;
+        if (audioSourceMain != null && audioSourceMain.Length > 0) return audioSourceMain[0].clip.length;
         return 0;
     }
 
     public int GetSampleRate()
     {
-        if (audioSourceBlend != null && audioSourceBlend.Length > 0) return (int)Mathf.Round(audioSourceBlend[0].clip.samples / audioSourceBlend[0].clip.length);
-        else if (audioSourceMain != null && audioSourceMain.Length > 0) return (int)Mathf.Round(audioSourceMain[0].clip.samples / audioSourceMain[0].clip.length);
+        if (audioSourceMain != null && audioSourceMain.Length > 0) return (int)Mathf.Round(audioSourceMain[0].clip.samples / audioSourceMain[0].clip.length);
         return 0;
     }
 
     public bool IsPlaying()
     {
-        return (audioSourceBlend != null && audioSourceBlend.Length > 0 && audioSourceBlend[0].isPlaying) || (audioSourceMain != null && audioSourceMain[0].isPlaying);
+        return (audioSourceMain != null && audioSourceMain[0].isPlaying);
     }
 
     public string ToStringFormat(Vector3 v)
@@ -678,14 +539,6 @@ public class M1Base : MonoBehaviour
                     audioSourceMain[i].Play();
                 }
 
-                if (useBlendMode)
-                {
-                    for (int i = 0; i < MAX_SOUNDS_PER_CHANNEL * 2; i++)
-                    {
-                        audioSourceBlend[i].Play();
-                    }
-                }
-
                 needToPlay = false;
                 isPlaying = true;
             }
@@ -693,8 +546,6 @@ public class M1Base : MonoBehaviour
             // In order to use values set in Unity's object inspector, we have to put them into an
             // M1 Positional library instance. Here's an example:
 
-            m1Positional.setUseBlendMode(useBlendMode);
-            m1Positional.setIgnoreTopBottom(ignoreTopBottom);
             m1Positional.setMuteWhenOutsideObject(muteWhenOutsideObject);
             m1Positional.setMuteWhenInsideObject(muteWhenInsideObject);
             m1Positional.setUseAttenuation(useAttenuation);
@@ -724,22 +575,12 @@ public class M1Base : MonoBehaviour
             if (useAttenuation)
             {
                 m1Positional.setAttenuationCurve(attenuationCurve.Evaluate(m1Positional.getDist()));
-                m1Positional.setAttenuationCurveBlendMode(attenuationCurveBlendMode.Evaluate(m1Positional.getDist()));
             }
 
             m1Positional.getCoefficients(ref coeffs);
             for (int i = 0; i < audioSourceMain.Length; i++)
             {
                 audioSourceMain[i].volume = coeffs[i] * outputGain;
-            }
-
-            if (useBlendMode)
-            {
-                m1Positional.getCoefficientsInterior(ref coeffsInterior);
-                for (int i = 0; i < audioSourceBlend.Length; i++)
-                {
-                    audioSourceBlend[i].volume = coeffsInterior[i] * outputGain;
-                }
             }
 
             if (debug)
@@ -756,19 +597,11 @@ public class M1Base : MonoBehaviour
                 {
                     str += string.Format("{0:0.000}, ", audioSourceMain[i].volume);
                 }
-                if (useBlendMode)
-                {
-                    str += " , " + "Returned Coefficients Internal (BlendMode): ";
-                    for (int i = 0; i < audioSourceBlend.Length; i++)
-                    {
-                        str += string.Format("{0:0.000}, ", audioSourceBlend[i].volume);
-                    }
-                }
                 Debug.Log(str);
             }
 
             // Mach1.Mach1Point3D angles = m1Positional.getCoefficientsRotation();
-            // Debug.Log("volumeWalls: " + coeffs + " , " + "volumeRoom" + coeffsInterior);
+            // Debug.Log("volumeWalls: " + coeffs);
             // Debug.Log("d: " + dist + ", d2: " + m1Positional.getDist());
 
             if (drawHelpers) 
