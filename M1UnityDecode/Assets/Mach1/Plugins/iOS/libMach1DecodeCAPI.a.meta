@@ -12,7 +12,7 @@ PluginImporter:
   validateReferences: 1
   platformData:
   - first:
-      '': Any
+      : Any
     second:
       enabled: 0
       settings:
@@ -21,6 +21,7 @@ PluginImporter:
         Exclude Linux64: 1
         Exclude Lumin: 1
         Exclude OSXUniversal: 1
+        Exclude VisionOS: 1
         Exclude WebGL: 1
         Exclude Win: 1
         Exclude Win64: 1
@@ -82,6 +83,15 @@ PluginImporter:
       settings:
         CPU: AnyCPU
   - first:
+      VisionOS: VisionOS
+    second:
+      enabled: 0
+      settings:
+        AddToEmbeddedBinaries: false
+        CPU: ARM64
+        CompileFlags: 
+        FrameworkDependencies: 
+  - first:
       WebGL: WebGL
     second:
       enabled: 0
@@ -91,7 +101,7 @@ PluginImporter:
     second:
       enabled: 1
       settings:
-        AddToEmbeddedBinaries: false
+        AddToEmbeddedBinaries: true
         CPU: AnyCPU
         CompileFlags: 
         FrameworkDependencies: 

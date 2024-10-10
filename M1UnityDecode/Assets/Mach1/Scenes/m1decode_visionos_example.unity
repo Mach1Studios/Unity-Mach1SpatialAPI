@@ -375,7 +375,7 @@ MonoBehaviour:
   - 7.wav
   - 8.wav
   autoPlay: 1
-  playOnAwake: 0
+  playOnAwake: 1
   isLoop: 1
   loadAudioOnStart: 1
   outputGain: 1
