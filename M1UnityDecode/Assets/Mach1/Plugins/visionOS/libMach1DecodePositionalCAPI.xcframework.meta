@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 307f943c49eff4fca9abd380c05eeff8
+guid: 5a7476d01893c42abbf215b0bd54067f
 PluginImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -34,9 +34,7 @@ PluginImporter:
     second:
       enabled: 0
       settings:
-        CPU: AnyCPU
         DefaultValueInitialized: true
-        OS: AnyOS
   - first:
       Standalone: Linux64
     second:
@@ -65,20 +63,7 @@ PluginImporter:
       VisionOS: VisionOS
     second:
       enabled: 1
-      settings:
-        AddToEmbeddedBinaries: false
-        CPU: ARM64
-        CompileFlags: 
-        FrameworkDependencies: 
-  - first:
-      iPhone: iOS
-    second:
-      enabled: 0
-      settings:
-        AddToEmbeddedBinaries: false
-        CPU: AnyCPU
-        CompileFlags: 
-        FrameworkDependencies: 
+      settings: {}
   userData: 
   assetBundleName: 
   assetBundleVariant: 

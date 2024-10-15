@@ -379,7 +379,7 @@ MonoBehaviour:
   isLoop: 1
   loadAudioOnStart: 1
   outputGain: 1
-  useAttenuation: 1
+  useAttenuation: 0
   attenuationCurve:
     serializedVersion: 2
     m_Curve:
