@@ -32,29 +32,35 @@ public class M1Base : MonoBehaviour
     public AnimationCurve attenuationCurve;
    
     private AudioSource[] audioSourceMain;
-
     private int MAX_SOUNDS_PER_CHANNEL;
     private Matrix4x4 matInternal;
 
     [Header("Point / Plane Setting")]
+    [Tooltip("When active we will trace a line from the AudioListener to the object and calculate the closest point on the object to the listener, when false the object will be treated as a point for how we rotate the audio mix")]
     public bool usePlaneCalculation = false;
 
     [Header("Advanced Settings")]
+    [Tooltip("If the AudioListener is inside the object, the mix will be muted")]
     public bool muteWhenInsideObject = false;
+    [Tooltip("If the AudioListener is outside the object, the mix will be muted")]
     public bool muteWhenOutsideObject = false;
 
     public bool useYawForRotation = true;
     public bool usePitchForRotation = true;
     public bool useRollForRotation = true;
 
+    [Tooltip("When false the object will be treated as a point and ignore rotations")]
     public bool useRotationOffset = false;
 
+    [Header("Target Audio Listener (optional)")]
+    [Tooltip("If not set, will try to find the first AudioListener in the scene")]
+    public AudioListener audiolistener;
+
+    [Header("Debug Settings")]
     public bool drawHelpers = false;
     public bool debug = false;
 
     private float[] coeffs;
-
-    private AudioListener audiolistener;
     private bool needToPlay;
 
     protected Mach1.Mach1DecodePositional m1Positional = new Mach1.Mach1DecodePositional();
@@ -170,7 +176,11 @@ public class M1Base : MonoBehaviour
 
     public void attachAudioListener() 
     {
-        audiolistener = GameObject.FindObjectOfType<AudioListener>();
+        if (audiolistener == null) 
+        {
+            audiolistener = GameObject.FindObjectOfType<AudioListener>();
+            Debug.Log("M1Obj found camera: " + audiolistener.name.ToString());
+        }
     }
 
     // Helper function to add audio clip to source, and add this to scene
