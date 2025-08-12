@@ -10,6 +10,10 @@ using UnityEngine.Networking;
 
 public class M1Base : MonoBehaviour
 {
+    [Header("Mach1 Decode Settings")]
+    [SerializeField]
+    public Mach1.Mach1DecodeMode decodeMode = Mach1.Mach1DecodeMode.M1DecodeSpatial_8;
+
     public AudioMixerGroup m1SpatialAudioMixerGroup;
 
     [Header("Asset Source Settings")]
@@ -132,16 +136,27 @@ public class M1Base : MonoBehaviour
 
     void Awake()
     {
+        EnsureDecodeModeInitialized();
     }
 
     void Start()
     {
+        // Make sure channel arrays and decoder mode reflect the selected dropdown before loading
+        EnsureDecodeModeInitialized();
         if (loadAudioOnStart)
         {
             LoadAudioData();
         }
         attachAudioListener();
     }
+
+#if UNITY_EDITOR
+    void OnValidate()
+    {
+        // Editor-time: adjust arrays only; avoid native calls while not playing
+        ConfigureChannelsForSelectedMode();
+    }
+#endif
 
     public void LoadAudioData()
     {
@@ -154,6 +169,71 @@ public class M1Base : MonoBehaviour
         }
 
         isPlaying = false;
+    }
+
+    private void EnsureDecodeModeInitialized()
+    {
+        ConfigureChannelsForSelectedMode();
+        ApplyDecodeModeIfPlaying();
+    }
+
+    private void ConfigureChannelsForSelectedMode()
+    {
+        int requiredChannels = GetChannelCountForMode(decodeMode);
+
+        // Preserve existing entries
+        AudioClip[] prevClips = audioClipMain;
+        string[] prevExternal = externalAudioFilenameMain;
+
+        // Set internal count and allocate arrays
+        InitComponents(requiredChannels);
+
+        // Restore preserved entries into the newly sized arrays
+        if (prevExternal != null)
+        {
+            int copy = Mathf.Min(prevExternal.Length, externalAudioFilenameMain.Length);
+            for (int i = 0; i < copy; i++) externalAudioFilenameMain[i] = prevExternal[i];
+        }
+        for (int i = 0; i < externalAudioFilenameMain.Length; i++)
+        {
+            if (string.IsNullOrEmpty(externalAudioFilenameMain[i])) externalAudioFilenameMain[i] = (i + 1) + ".wav";
+        }
+
+        if (prevClips != null)
+        {
+            int copy = Mathf.Min(prevClips.Length, audioClipMain.Length);
+            for (int i = 0; i < copy; i++) audioClipMain[i] = prevClips[i];
+        }
+    }
+
+    private void ApplyDecodeModeIfPlaying()
+    {
+        if (!Application.isPlaying) return;
+        try
+        {
+            m1Positional.setDecodeMode(decodeMode);
+        }
+        catch (System.EntryPointNotFoundException)
+        {
+            Debug.LogWarning("Mach1: setDecodeMode symbol not found in native plugin. Ensure correct Mach1 plugin DLLs are imported and platform settings are correct.");
+        }
+    }
+
+    private int GetChannelCountForMode(Mach1.Mach1DecodeMode mode)
+    {
+        switch (mode)
+        {
+            case Mach1.Mach1DecodeMode.M1DecodeSpatial_4:
+                return 4;
+            case Mach1.Mach1DecodeMode.M1DecodeSpatial_8:
+                return 8;
+            case Mach1.Mach1DecodeMode.M1DecodeSpatial_12:
+                return 12;
+            case Mach1.Mach1DecodeMode.M1DecodeSpatial_14:
+                return 14;
+            default:
+                return 8;
+        }
     }
 
     public void UnloadAudioData()
