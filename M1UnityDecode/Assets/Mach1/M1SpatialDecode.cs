@@ -107,6 +107,12 @@ public class M1SpatialDecode : MonoBehaviour
         return curve;
     }
 
+    public M1SpatialDecode()
+    {
+        coeffs = new float[28];
+        m1Positional.setPlatformType(Mach1.Mach1PlatformType.Mach1PlatformUnity);
+    }
+
     protected void InitComponents(int MAX_SOUNDS_PER_CHANNEL)
     {
         this.MAX_SOUNDS_PER_CHANNEL = MAX_SOUNDS_PER_CHANNEL;
