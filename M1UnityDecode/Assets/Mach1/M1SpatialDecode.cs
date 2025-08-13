@@ -8,7 +8,7 @@ using System.Collections;
 using System.IO;
 using UnityEngine.Networking;
 
-public class M1Base : MonoBehaviour
+public class M1SpatialDecode : MonoBehaviour
 {
     [Header("Mach1 Decode Settings")]
     [SerializeField]
@@ -105,12 +105,6 @@ public class M1Base : MonoBehaviour
             curve.SmoothTangents(i, 0);
         }
         return curve;
-    }
-
-    public M1Base()
-    {
-        coeffs = new float[18];
-        m1Positional.setPlatformType(Mach1.Mach1PlatformType.Mach1PlatformUnity);
     }
 
     protected void InitComponents(int MAX_SOUNDS_PER_CHANNEL)
@@ -227,8 +221,6 @@ public class M1Base : MonoBehaviour
                 return 4;
             case Mach1.Mach1DecodeMode.M1DecodeSpatial_8:
                 return 8;
-            case Mach1.Mach1DecodeMode.M1DecodeSpatial_12:
-                return 12;
             case Mach1.Mach1DecodeMode.M1DecodeSpatial_14:
                 return 14;
             default:

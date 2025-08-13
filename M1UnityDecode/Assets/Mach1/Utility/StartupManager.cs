@@ -11,8 +11,8 @@ public class StartupManager : MonoBehaviour
     /// This holds references to the sounds we want to load and then play in unison
     /// </summary>
 
-    public M1HorizonDecode[] sounds;
-	//public M1HorizonDecode[] sounds2;
+    public M1SpatialDecode[] sounds;
+	//public M1SpatialDecode[] sounds2;
 
     //public MoviePlayerSample[] movies;
 
@@ -23,8 +23,8 @@ public class StartupManager : MonoBehaviour
 
     void Start()
     {
-		sounds = GameObject.FindObjectsOfType<M1HorizonDecode>();
-		//sounds2 = GameObject.FindObjectsOfType<M1HorizonDecode> ();
+		sounds = GameObject.FindObjectsOfType<M1SpatialDecode>();
+		//sounds2 = GameObject.FindObjectsOfType<M1SpatialDecode> ();
 
         // enable loading screen
         if (loadingScreen != null) loadingScreen.SetActive(true);

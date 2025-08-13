@@ -8,9 +8,9 @@ namespace Mach1
 {
     public class Mach1DecodePositional : IDisposable
     {
-#if (UNITY_IOS || UNITY_VISIONOS || UNITY_TVOS) && !UNITY_EDITOR
+#if UNITY_IOS && !UNITY_EDITOR
         internal const string libname = "__Internal";
-#elif UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_ANDROID
+#elif UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
         internal const string libname = "Mach1DecodePositionalCAPI";
 #else
         internal const string libname = "libMach1DecodePositionalCAPI";
@@ -140,7 +140,6 @@ namespace Mach1
             /// - Parameters:
             ///     - M1DecodeSpatial_4  (compass / yaw | 4 channels)
             ///     - M1DecodeSpatial_8  (default spatial | 8 channels)
-            ///     - M1DecodeSpatial_12 (higher order spatial | 12 channels)
             ///     - M1DecodeSpatial_14 (higher order spatial | 14 channels)
 		}
 
