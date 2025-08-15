@@ -350,9 +350,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 170300523}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1230ee4ea5de09046a2fb2f54137beb5, type: 3}
+  m_Script: {fileID: 11500000, guid: 9c743875857595d40918cd1360468f37, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  decodeMode: 1
   m1SpatialAudioMixerGroup: {fileID: 0}
   isFromAssets: 1
   audioClipMain:
@@ -375,7 +376,7 @@ MonoBehaviour:
   - 7.wav
   - 8.wav
   autoPlay: 1
-  playOnAwake: 1
+  playOnAwake: 0
   isLoop: 1
   loadAudioOnStart: 1
   outputGain: 1
@@ -420,6 +421,7 @@ MonoBehaviour:
   usePitchForRotation: 1
   useRollForRotation: 1
   useRotationOffset: 0
+  audiolistener: {fileID: 0}
   drawHelpers: 0
   debug: 0
 --- !u!850595691 &580445171

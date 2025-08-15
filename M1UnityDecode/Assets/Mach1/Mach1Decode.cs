@@ -11,9 +11,9 @@ namespace Mach1
 #if (UNITY_IOS || UNITY_VISIONOS || UNITY_TVOS) && !UNITY_EDITOR
         internal const string libname = "__Internal";
 #elif UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_ANDROID
-        internal const string libname = "Mach1DecodePositionalCAPI";
+        internal const string libname = "Mach1DecodeCAPI";
 #else
-        internal const string libname = "libMach1DecodePositionalCAPI";
+        internal const string libname = "libMach1DecodeCAPI";
 #endif
 
         [DllImport(libname)]
@@ -99,7 +99,6 @@ namespace Mach1
             /// - Parameters:
             ///     - M1DecodeSpatial_4  (compass / yaw | 4 channels)
             ///     - M1DecodeSpatial_8  (spatial | 8 channels)
-            ///     - M1DecodeSpatial_12 (higher order spatial | 12 channels)
             ///     - M1DecodeSpatial_14 (higher order spatial | 14 channels)
         }
 

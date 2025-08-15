@@ -165,9 +165,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 170300523}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1230ee4ea5de09046a2fb2f54137beb5, type: 3}
+  m_Script: {fileID: 11500000, guid: 9c743875857595d40918cd1360468f37, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  decodeMode: 1
   m1SpatialAudioMixerGroup: {fileID: 0}
   isFromAssets: 1
   audioClipMain:
@@ -181,17 +182,19 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 50c21e8d9e1104d2f9e2711d5d31dfa1, type: 3}
   externalAudioPath: file:///
   externalAudioFilenameMain:
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
+  - 1.wav
+  - 2.wav
+  - 3.wav
+  - 4.wav
+  - 5.wav
+  - 6.wav
+  - 7.wav
+  - 8.wav
   autoPlay: 1
-  isLoop: 1
+  playOnAwake: 0
+  isLoop: 0
   loadAudioOnStart: 1
+  outputGain: 1
   useAttenuation: 0
   attenuationCurve:
     serializedVersion: 2
@@ -232,61 +235,10 @@ MonoBehaviour:
   useYawForRotation: 1
   usePitchForRotation: 1
   useRollForRotation: 1
-  drawHelpers: 1
-  debug: 1
-  useBlendMode: 0
-  audioClipBlend:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  externalAudioFilenameBlend:
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  attenuationCurveBlendMode:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: -1
-      outSlope: -1
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0.33333334
-    - serializedVersion: 3
-      time: 0.5
-      value: 0.5
-      inSlope: -1
-      outSlope: -1
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    - serializedVersion: 3
-      time: 1
-      value: 0
-      inSlope: -1
-      outSlope: -1
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  ignoreTopBottom: 0
+  useRotationOffset: 0
+  audiolistener: {fileID: 0}
+  drawHelpers: 0
+  debug: 0
 --- !u!1001 &293051765
 PrefabInstance:
   m_ObjectHideFlags: 0
