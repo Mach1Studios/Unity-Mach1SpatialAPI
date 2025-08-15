@@ -109,8 +109,32 @@ public class M1SpatialDecode : MonoBehaviour
 
     public M1SpatialDecode()
     {
-        coeffs = new float[28];
         m1Positional.setPlatformType(Mach1.Mach1PlatformType.Mach1PlatformUnity);
+        UpdateDecodeMode(); // Initialize with default decode mode
+    }
+
+    /// <summary>
+    /// Updates the decode mode and resizes all audio components accordingly
+    /// </summary>
+    public void UpdateDecodeMode()
+    {
+        // Set the decode mode in the positional decoder
+        m1Positional.setDecodeMode(decodeMode);
+        
+        // Get the channel count for this decode mode
+        int channelCount = m1Positional.getFormatChannelCount();
+        int coeffCount = m1Positional.getFormatCoeffCount();
+        
+        // Initialize components with the correct channel count
+        InitComponents(channelCount);
+        
+        // Resize coefficients array
+        coeffs = new float[coeffCount];
+        
+        if (debug)
+        {
+            Debug.Log($"M1SpatialDecode: Updated to decode mode {decodeMode} with {channelCount} channels and {coeffCount} coefficients");
+        }
     }
 
     protected void InitComponents(int MAX_SOUNDS_PER_CHANNEL)
@@ -138,6 +162,16 @@ public class M1SpatialDecode : MonoBehaviour
     {
     }
 
+    // Called when values change in the Unity Inspector
+    void OnValidate()
+    {
+        // Only update if we're in play mode and the component is initialized
+        if (Application.isPlaying && m1Positional != null)
+        {
+            UpdateDecodeMode();
+        }
+    }
+
     void Start()
     {
         if (loadAudioOnStart)
@@ -147,9 +181,48 @@ public class M1SpatialDecode : MonoBehaviour
         attachAudioListener();
     }
 
+    /// <summary>
+    /// Changes the decode mode at runtime and reinitializes audio components
+    /// </summary>
+    /// <param name="newDecodeMode">The new decode mode to use</param>
+    public void ChangeDecodeMode(Mach1.Mach1DecodeMode newDecodeMode)
+    {
+        if (decodeMode == newDecodeMode) return; // No change needed
+        
+        bool wasPlaying = IsPlaying();
+        
+        // Stop and unload current audio if loaded
+        if (IsReady())
+        {
+            StopAudio();
+            UnloadAudioData();
+        }
+        
+        // Update decode mode
+        decodeMode = newDecodeMode;
+        UpdateDecodeMode();
+        
+        // Reload audio with new configuration
+        if (loadAudioOnStart)
+        {
+            LoadAudioData();
+            
+            // Resume playing if it was playing before
+            if (wasPlaying && autoPlay)
+            {
+                needToPlay = true;
+            }
+        }
+        
+        if (debug)
+        {
+            Debug.Log($"M1SpatialDecode: Changed decode mode to {newDecodeMode}");
+        }
+    }
+
     public void LoadAudioData()
     {
-        // Sounds
+        // Sounds - create stereo pairs for each channel (L/R)
         audioSourceMain = new AudioSource[MAX_SOUNDS_PER_CHANNEL * 2];
 
         for (int i = 0; i < Mathf.Max(externalAudioFilenameMain.Length, audioClipMain.Length); i++)
@@ -162,18 +235,42 @@ public class M1SpatialDecode : MonoBehaviour
 
     public void UnloadAudioData()
     {
-        if (isFromAssets)
+        // Stop all audio sources first
+        if (audioSourceMain != null)
         {
-            for (int i = 0; i < audioClipMain.Length; i++)
+            for (int i = 0; i < audioSourceMain.Length; i++)
             {
-                audioClipMain[i].UnloadAudioData();
+                if (audioSourceMain[i] != null)
+                {
+                    audioSourceMain[i].Stop();
+                    DestroyImmediate(audioSourceMain[i]);
+                }
             }
+            audioSourceMain = null;
         }
-        else
+
+        // Unload audio clips
+        if (audioClipMain != null)
         {
-            for (int i = 0; i < audioClipMain.Length; i++)
+            if (isFromAssets)
             {
-                AudioClip.Destroy(audioClipMain[i]);
+                for (int i = 0; i < audioClipMain.Length; i++)
+                {
+                    if (audioClipMain[i] != null)
+                    {
+                        audioClipMain[i].UnloadAudioData();
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < audioClipMain.Length; i++)
+                {
+                    if (audioClipMain[i] != null)
+                    {
+                        AudioClip.Destroy(audioClipMain[i]);
+                    }
+                }
             }
         }
 
@@ -462,6 +559,21 @@ public class M1SpatialDecode : MonoBehaviour
         return fadeMultiplier;
     }
 
+    /// <summary>
+    /// Gets information about the current decode mode configuration
+    /// </summary>
+    /// <returns>String with decode mode information</returns>
+    public string GetDecodeModeInfo()
+    {
+        if (m1Positional != null)
+        {
+            int channelCount = m1Positional.getFormatChannelCount();
+            int coeffCount = m1Positional.getFormatCoeffCount();
+            return $"Mode: {decodeMode}, Channels: {channelCount}, Coefficients: {coeffCount}, Audio Sources: {(audioSourceMain?.Length ?? 0)}";
+        }
+        return $"Mode: {decodeMode} (not initialized)";
+    }
+
     public bool IsPlaying()
     {
         return (audioSourceMain != null && audioSourceMain[0].isPlaying);
@@ -599,9 +711,22 @@ public class M1SpatialDecode : MonoBehaviour
             }
 
             m1Positional.getCoefficients(ref coeffs);
-            for (int i = 0; i < audioSourceMain.Length; i++)
+            
+            // Validate that we have the correct number of audio sources for the current decode mode
+            int expectedAudioSources = MAX_SOUNDS_PER_CHANNEL * 2; // stereo pairs
+            if (audioSourceMain.Length != expectedAudioSources)
             {
-                audioSourceMain[i].volume = coeffs[i] * outputGain * fadeMultiplier;
+                Debug.LogWarning($"M1SpatialDecode: Audio source count mismatch. Expected {expectedAudioSources}, got {audioSourceMain.Length}. Consider calling UpdateDecodeMode().");
+            }
+            
+            // Apply coefficients to audio sources, ensuring we don't exceed array bounds
+            int maxIndex = Mathf.Min(audioSourceMain.Length, coeffs.Length);
+            for (int i = 0; i < maxIndex; i++)
+            {
+                if (audioSourceMain[i] != null)
+                {
+                    audioSourceMain[i].volume = coeffs[i] * outputGain * fadeMultiplier;
+                }
             }
 
             if (debug)
