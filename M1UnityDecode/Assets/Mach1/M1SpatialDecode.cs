@@ -179,7 +179,7 @@ public class M1SpatialDecode : MonoBehaviour
 
     private void ConfigureChannelsForSelectedMode()
     {
-        int requiredChannels = GetChannelCountForMode(decodeMode);
+        int requiredChannels = m1Positional.getFormatChannelCount();
 
         // Preserve existing entries
         AudioClip[] prevClips = audioClipMain;
@@ -216,21 +216,6 @@ public class M1SpatialDecode : MonoBehaviour
         catch (System.EntryPointNotFoundException)
         {
             Debug.LogWarning("Mach1: setDecodeMode symbol not found in native plugin. Ensure correct Mach1 plugin DLLs are imported and platform settings are correct.");
-        }
-    }
-
-    private int GetChannelCountForMode(Mach1.Mach1DecodeMode mode)
-    {
-        switch (mode)
-        {
-            case Mach1.Mach1DecodeMode.M1DecodeSpatial_4:
-                return 4;
-            case Mach1.Mach1DecodeMode.M1DecodeSpatial_8:
-                return 8;
-            case Mach1.Mach1DecodeMode.M1DecodeSpatial_14:
-                return 14;
-            default:
-                return 8;
         }
     }
 
@@ -348,7 +333,6 @@ public class M1SpatialDecode : MonoBehaviour
     IEnumerator LoadAudio(string url, bool room, int n, bool isFromAssets)
     {
         AudioClip clip = null;
-        
 
         if (isFromAssets)
         {   
