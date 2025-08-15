@@ -13,7 +13,6 @@ public class M1SpatialDecode : MonoBehaviour
     [Header("Mach1 Decode Settings")]
     [SerializeField]
     public Mach1.Mach1DecodeMode decodeMode = Mach1.Mach1DecodeMode.M1DecodeSpatial_8;
-
     public AudioMixerGroup m1SpatialAudioMixerGroup;
 
     [Header("Asset Source Settings")]
@@ -63,7 +62,6 @@ public class M1SpatialDecode : MonoBehaviour
     [Header("Debug Settings")]
     public bool drawHelpers = false;
     public bool debug = false;
-
     private float[] coeffs;
     private bool needToPlay;
     private float fadeMultiplier = 1.0f; // Added fadeMultiplier variable
@@ -109,8 +107,8 @@ public class M1SpatialDecode : MonoBehaviour
 
     public M1SpatialDecode()
     {
-        coeffs = new float[28];
         m1Positional.setPlatformType(Mach1.Mach1PlatformType.Mach1PlatformUnity);
+        // coeffs array will be initialized by SetDecodeMode()
     }
 
     protected void InitComponents(int MAX_SOUNDS_PER_CHANNEL)
@@ -136,13 +134,11 @@ public class M1SpatialDecode : MonoBehaviour
 
     void Awake()
     {
-        EnsureDecodeModeInitialized();
+        InitializeDecodeMode();
     }
 
     void Start()
     {
-        // Make sure channel arrays and decoder mode reflect the selected dropdown before loading
-        EnsureDecodeModeInitialized();
         if (loadAudioOnStart)
         {
             LoadAudioData();
@@ -153,10 +149,79 @@ public class M1SpatialDecode : MonoBehaviour
 #if UNITY_EDITOR
     void OnValidate()
     {
-        // Editor-time: adjust arrays only; avoid native calls while not playing
-        ConfigureChannelsForSelectedMode();
+        // Editor-time: set decode mode and configure arrays
+        if (m1Positional != null)
+        {
+            SetDecodeMode(decodeMode);
+        }
     }
 #endif
+
+    /// <summary>
+    /// Sets the decode mode and updates all associated arrays based on API functions
+    /// </summary>
+    /// <param name="mode">The decode mode to set</param>
+    public void SetDecodeMode(Mach1.Mach1DecodeMode mode)
+    {
+        try
+        {
+            // Set the decode mode in the native library
+            m1Positional.setDecodeMode(mode);
+            decodeMode = mode;
+
+            // Get the channel and coefficient counts from the API
+            int channelCount = m1Positional.getFormatChannelCount();
+            int coeffCount = (int)m1Positional.getFormatCoeffCount();
+
+            // Update MAX_SOUNDS_PER_CHANNEL and reinitialize components
+            InitComponents(channelCount);
+
+            // Update coefficients array
+            coeffs = new float[coeffCount];
+
+            if (Application.isPlaying)
+            {
+                Debug.Log($"Mach1: Decode mode set to {mode}, Channels: {channelCount}, Coefficients: {coeffCount}");
+            }
+        }
+        catch (System.EntryPointNotFoundException ex)
+        {
+            Debug.LogError($"Mach1: Failed to set decode mode - {ex.Message}. Ensure correct Mach1 plugin DLLs are imported and platform settings are correct.");
+        }
+    }
+
+    /// <summary>
+    /// Initialize decode mode at runtime startup
+    /// </summary>
+    private void InitializeDecodeMode()
+    {
+        SetDecodeMode(decodeMode);
+    }
+
+    /// <summary>
+    /// Public method to change decode mode at runtime
+    /// </summary>
+    /// <param name="newMode">The new decode mode to set</param>
+    public void ChangeDecodeMode(Mach1.Mach1DecodeMode newMode)
+    {
+        if (newMode != decodeMode)
+        {
+            SetDecodeMode(newMode);
+            
+            // If audio is already loaded, we need to reload it with the new channel configuration
+            if (audioSourceMain != null && IsReady())
+            {
+                bool wasPlaying = IsPlaying();
+                UnloadAudioData();
+                LoadAudioData();
+                
+                if (wasPlaying)
+                {
+                    PlayAudio();
+                }
+            }
+        }
+    }
 
     public void LoadAudioData()
     {
@@ -169,69 +234,6 @@ public class M1SpatialDecode : MonoBehaviour
         }
 
         isPlaying = false;
-    }
-
-    private void EnsureDecodeModeInitialized()
-    {
-        ConfigureChannelsForSelectedMode();
-        ApplyDecodeModeIfPlaying();
-    }
-
-    private void ConfigureChannelsForSelectedMode()
-    {
-        int requiredChannels = GetChannelCountForMode(decodeMode);
-
-        // Preserve existing entries
-        AudioClip[] prevClips = audioClipMain;
-        string[] prevExternal = externalAudioFilenameMain;
-
-        // Set internal count and allocate arrays
-        InitComponents(requiredChannels);
-
-        // Restore preserved entries into the newly sized arrays
-        if (prevExternal != null)
-        {
-            int copy = Mathf.Min(prevExternal.Length, externalAudioFilenameMain.Length);
-            for (int i = 0; i < copy; i++) externalAudioFilenameMain[i] = prevExternal[i];
-        }
-        for (int i = 0; i < externalAudioFilenameMain.Length; i++)
-        {
-            if (string.IsNullOrEmpty(externalAudioFilenameMain[i])) externalAudioFilenameMain[i] = (i + 1) + ".wav";
-        }
-
-        if (prevClips != null)
-        {
-            int copy = Mathf.Min(prevClips.Length, audioClipMain.Length);
-            for (int i = 0; i < copy; i++) audioClipMain[i] = prevClips[i];
-        }
-    }
-
-    private void ApplyDecodeModeIfPlaying()
-    {
-        if (!Application.isPlaying) return;
-        try
-        {
-            m1Positional.setDecodeMode(decodeMode);
-        }
-        catch (System.EntryPointNotFoundException)
-        {
-            Debug.LogWarning("Mach1: setDecodeMode symbol not found in native plugin. Ensure correct Mach1 plugin DLLs are imported and platform settings are correct.");
-        }
-    }
-
-    private int GetChannelCountForMode(Mach1.Mach1DecodeMode mode)
-    {
-        switch (mode)
-        {
-            case Mach1.Mach1DecodeMode.M1DecodeSpatial_4:
-                return 4;
-            case Mach1.Mach1DecodeMode.M1DecodeSpatial_8:
-                return 8;
-            case Mach1.Mach1DecodeMode.M1DecodeSpatial_14:
-                return 14;
-            default:
-                return 8;
-        }
     }
 
     public void UnloadAudioData()
