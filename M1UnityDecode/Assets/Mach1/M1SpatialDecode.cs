@@ -7,15 +7,13 @@ using UnityEngine.Audio;
 using System.Collections;
 using System.IO;
 using UnityEngine.Networking;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 public class M1SpatialDecode : MonoBehaviour
 {
     [Header("Mach1 Decode Settings")]
     [SerializeField]
     public Mach1.Mach1DecodeMode decodeMode = Mach1.Mach1DecodeMode.M1DecodeSpatial_8;
+
     public AudioMixerGroup m1SpatialAudioMixerGroup;
 
     [Header("Asset Source Settings")]
@@ -65,6 +63,7 @@ public class M1SpatialDecode : MonoBehaviour
     [Header("Debug Settings")]
     public bool drawHelpers = false;
     public bool debug = false;
+
     private float[] coeffs;
     private bool needToPlay;
     private float fadeMultiplier = 1.0f; // Added fadeMultiplier variable
@@ -110,8 +109,8 @@ public class M1SpatialDecode : MonoBehaviour
 
     public M1SpatialDecode()
     {
+        coeffs = new float[28];
         m1Positional.setPlatformType(Mach1.Mach1PlatformType.Mach1PlatformUnity);
-        // coeffs array will be initialized by SetDecodeMode()
     }
 
     protected void InitComponents(int MAX_SOUNDS_PER_CHANNEL)
@@ -124,26 +123,19 @@ public class M1SpatialDecode : MonoBehaviour
             attenuationCurve = generateCurve(10);
         }
 
-        // Only initialize arrays if they don't exist or are the wrong size
-        // (ResizeAudioArrays handles the proper resizing with data preservation)
-        if (externalAudioFilenameMain == null || externalAudioFilenameMain.Length != MAX_SOUNDS_PER_CHANNEL)
+        // Init filenames
+        externalAudioFilenameMain = new string[MAX_SOUNDS_PER_CHANNEL];
+        for (int i = 0; i < MAX_SOUNDS_PER_CHANNEL; i++)
         {
-            externalAudioFilenameMain = new string[MAX_SOUNDS_PER_CHANNEL];
-            for (int i = 0; i < MAX_SOUNDS_PER_CHANNEL; i++)
-            {
-                externalAudioFilenameMain[i] = (i + 1) + ".wav";
-            }
+            externalAudioFilenameMain[i] = (i + 1) + ".wav";
         }
 
-        if (audioClipMain == null || audioClipMain.Length != MAX_SOUNDS_PER_CHANNEL)
-        {
-            audioClipMain = new AudioClip[MAX_SOUNDS_PER_CHANNEL];
-        }
+        // audioClip
+        audioClipMain = new AudioClip[MAX_SOUNDS_PER_CHANNEL];
     }
 
     void Awake()
     {
-        InitializeDecodeMode();
     }
 
     void Start()
@@ -153,129 +145,6 @@ public class M1SpatialDecode : MonoBehaviour
             LoadAudioData();
         }
         attachAudioListener();
-    }
-
-#if UNITY_EDITOR
-    void OnValidate()
-    {
-        // Editor-time: set decode mode and configure arrays
-        if (m1Positional != null)
-        {
-            SetDecodeMode(decodeMode);
-            
-            // Force Unity to update the Inspector to show the resized arrays
-            UnityEditor.EditorUtility.SetDirty(this);
-        }
-    }
-#endif
-
-    /// <summary>
-    /// Sets the decode mode and updates all associated arrays based on API functions
-    /// </summary>
-    /// <param name="mode">The decode mode to set</param>
-    public void SetDecodeMode(Mach1.Mach1DecodeMode mode)
-    {
-        try
-        {
-            // Set the decode mode in the native library
-            m1Positional.setDecodeMode(mode);
-            decodeMode = mode;
-
-            // Get the channel and coefficient counts from the API
-            int channelCount = m1Positional.getFormatChannelCount();
-            int coeffCount = (int)m1Positional.getFormatCoeffCount();
-
-            // Preserve existing data before resizing arrays
-            ResizeAudioArrays(channelCount);
-
-            // Update MAX_SOUNDS_PER_CHANNEL and reinitialize components
-            InitComponents(channelCount);
-
-            // Update coefficients array
-            coeffs = new float[coeffCount];
-
-            if (Application.isPlaying)
-            {
-                Debug.Log($"Mach1: Decode mode set to {mode}, Channels: {channelCount}, Coefficients: {coeffCount}");
-            }
-        }
-        catch (System.EntryPointNotFoundException ex)
-        {
-            Debug.LogError($"Mach1: Failed to set decode mode - {ex.Message}. Ensure correct Mach1 plugin DLLs are imported and platform settings are correct.");
-        }
-    }
-
-    /// <summary>
-    /// Resize the audio arrays while preserving existing data
-    /// </summary>
-    /// <param name="newChannelCount">The new channel count</param>
-    private void ResizeAudioArrays(int newChannelCount)
-    {
-        // Preserve existing AudioClip array data
-        AudioClip[] oldAudioClips = audioClipMain;
-        audioClipMain = new AudioClip[newChannelCount];
-        if (oldAudioClips != null)
-        {
-            int copyCount = Mathf.Min(oldAudioClips.Length, audioClipMain.Length);
-            for (int i = 0; i < copyCount; i++)
-            {
-                audioClipMain[i] = oldAudioClips[i];
-            }
-        }
-
-        // Preserve existing external audio filename array data
-        string[] oldExternalNames = externalAudioFilenameMain;
-        externalAudioFilenameMain = new string[newChannelCount];
-        if (oldExternalNames != null)
-        {
-            int copyCount = Mathf.Min(oldExternalNames.Length, externalAudioFilenameMain.Length);
-            for (int i = 0; i < copyCount; i++)
-            {
-                externalAudioFilenameMain[i] = oldExternalNames[i];
-            }
-        }
-
-        // Fill in default names for new slots
-        for (int i = 0; i < externalAudioFilenameMain.Length; i++)
-        {
-            if (string.IsNullOrEmpty(externalAudioFilenameMain[i]))
-            {
-                externalAudioFilenameMain[i] = (i + 1) + ".wav";
-            }
-        }
-    }
-
-    /// <summary>
-    /// Initialize decode mode at runtime startup
-    /// </summary>
-    private void InitializeDecodeMode()
-    {
-        SetDecodeMode(decodeMode);
-    }
-
-    /// <summary>
-    /// Public method to change decode mode at runtime
-    /// </summary>
-    /// <param name="newMode">The new decode mode to set</param>
-    public void ChangeDecodeMode(Mach1.Mach1DecodeMode newMode)
-    {
-        if (newMode != decodeMode)
-        {
-            SetDecodeMode(newMode);
-            
-            // If audio is already loaded, we need to reload it with the new channel configuration
-            if (audioSourceMain != null && IsReady())
-            {
-                bool wasPlaying = IsPlaying();
-                UnloadAudioData();
-                LoadAudioData();
-                
-                if (wasPlaying)
-                {
-                    PlayAudio();
-                }
-            }
-        }
     }
 
     public void LoadAudioData()
