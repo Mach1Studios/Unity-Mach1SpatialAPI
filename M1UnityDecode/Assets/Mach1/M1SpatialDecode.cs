@@ -7,6 +7,9 @@ using UnityEngine.Audio;
 using System.Collections;
 using System.IO;
 using UnityEngine.Networking;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 public class M1SpatialDecode : MonoBehaviour
 {
@@ -121,15 +124,21 @@ public class M1SpatialDecode : MonoBehaviour
             attenuationCurve = generateCurve(10);
         }
 
-        // Init filenames
-        externalAudioFilenameMain = new string[MAX_SOUNDS_PER_CHANNEL];
-        for (int i = 0; i < MAX_SOUNDS_PER_CHANNEL; i++)
+        // Only initialize arrays if they don't exist or are the wrong size
+        // (ResizeAudioArrays handles the proper resizing with data preservation)
+        if (externalAudioFilenameMain == null || externalAudioFilenameMain.Length != MAX_SOUNDS_PER_CHANNEL)
         {
-            externalAudioFilenameMain[i] = (i + 1) + ".wav";
+            externalAudioFilenameMain = new string[MAX_SOUNDS_PER_CHANNEL];
+            for (int i = 0; i < MAX_SOUNDS_PER_CHANNEL; i++)
+            {
+                externalAudioFilenameMain[i] = (i + 1) + ".wav";
+            }
         }
 
-        // audioClip
-        audioClipMain = new AudioClip[MAX_SOUNDS_PER_CHANNEL];
+        if (audioClipMain == null || audioClipMain.Length != MAX_SOUNDS_PER_CHANNEL)
+        {
+            audioClipMain = new AudioClip[MAX_SOUNDS_PER_CHANNEL];
+        }
     }
 
     void Awake()
@@ -153,6 +162,9 @@ public class M1SpatialDecode : MonoBehaviour
         if (m1Positional != null)
         {
             SetDecodeMode(decodeMode);
+            
+            // Force Unity to update the Inspector to show the resized arrays
+            UnityEditor.EditorUtility.SetDirty(this);
         }
     }
 #endif
@@ -173,6 +185,9 @@ public class M1SpatialDecode : MonoBehaviour
             int channelCount = m1Positional.getFormatChannelCount();
             int coeffCount = (int)m1Positional.getFormatCoeffCount();
 
+            // Preserve existing data before resizing arrays
+            ResizeAudioArrays(channelCount);
+
             // Update MAX_SOUNDS_PER_CHANNEL and reinitialize components
             InitComponents(channelCount);
 
@@ -187,6 +202,46 @@ public class M1SpatialDecode : MonoBehaviour
         catch (System.EntryPointNotFoundException ex)
         {
             Debug.LogError($"Mach1: Failed to set decode mode - {ex.Message}. Ensure correct Mach1 plugin DLLs are imported and platform settings are correct.");
+        }
+    }
+
+    /// <summary>
+    /// Resize the audio arrays while preserving existing data
+    /// </summary>
+    /// <param name="newChannelCount">The new channel count</param>
+    private void ResizeAudioArrays(int newChannelCount)
+    {
+        // Preserve existing AudioClip array data
+        AudioClip[] oldAudioClips = audioClipMain;
+        audioClipMain = new AudioClip[newChannelCount];
+        if (oldAudioClips != null)
+        {
+            int copyCount = Mathf.Min(oldAudioClips.Length, audioClipMain.Length);
+            for (int i = 0; i < copyCount; i++)
+            {
+                audioClipMain[i] = oldAudioClips[i];
+            }
+        }
+
+        // Preserve existing external audio filename array data
+        string[] oldExternalNames = externalAudioFilenameMain;
+        externalAudioFilenameMain = new string[newChannelCount];
+        if (oldExternalNames != null)
+        {
+            int copyCount = Mathf.Min(oldExternalNames.Length, externalAudioFilenameMain.Length);
+            for (int i = 0; i < copyCount; i++)
+            {
+                externalAudioFilenameMain[i] = oldExternalNames[i];
+            }
+        }
+
+        // Fill in default names for new slots
+        for (int i = 0; i < externalAudioFilenameMain.Length; i++)
+        {
+            if (string.IsNullOrEmpty(externalAudioFilenameMain[i]))
+            {
+                externalAudioFilenameMain[i] = (i + 1) + ".wav";
+            }
         }
     }
 
