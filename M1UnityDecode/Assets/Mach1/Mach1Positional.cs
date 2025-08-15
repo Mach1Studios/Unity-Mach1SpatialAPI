@@ -52,8 +52,6 @@ namespace Mach1
         [DllImport(libname)]
         internal static extern void Mach1DecodePositionalCAPI_setUseRollForRotation(IntPtr M1obj, bool useRollForRotation);
 
-        [DllImport(libname)]
-        internal static extern void Mach1DecodePositionalCAPI_setPlatformType(IntPtr M1obj, bool type);
 
         [DllImport(libname)]
         internal static extern void Mach1DecodePositionalCAPI_setListenerPosition(IntPtr M1obj, Mach1Point3D point);
@@ -296,7 +294,7 @@ namespace Mach1
             /// Return number of channels in current decode algorithm
         }
 
-        public float getFormatCoeffCount()
+        public int getFormatCoeffCount()
         {
             return Mach1DecodePositionalCAPI_getFormatCoeffCount(M1obj);
             /// Return number of coeffs for resizing the results
