@@ -23,6 +23,5 @@ _It is recommended to increase your project's `ProjectSettings` `Max Real Voices
 
 #### Advanced Settings:
  - `Use Closest Point Rotation Mute Inside` when active the positional rotation of the Mach1 mix will rotate along the closest point of the closest plane to the camera. This is to have it rotate along a plane instead of a point.
- - `BlendMode` function is an experimental feature that allows pre-rendered room modeling by using the player's positional data along with orientation data to correctly mix between a pre-rendered center soundscape and a pre-rendered bound/wall soundscape. 
 
-Please contact `dylan@mach1studios.com` for references on best mixing practices and use.
+Please contact `whatsup@mach1.tech` for references on best mixing practices and use.
