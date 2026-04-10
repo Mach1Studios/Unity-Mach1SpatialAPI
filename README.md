@@ -2,10 +2,8 @@
 
 #### Current Audio Formats
 ##### _all algorithms contained inside `libMach1Decode` & `libMach1DecodePositional`, all functions/features inside `M1Base`_
- - M1Spatial [Multichannel] / 8Channel [M1SpatialDecode.cs] {Yaw,Pitch,Roll + Positional}
- - M1Horizon [Multichannel] / 4Channel [M1HorizonDecode.cs] {Yaw + Positional}
+ - M1Spatial [Multichannel] / 4channel/8Channel/14channel [M1SpatialDecode.cs] {Yaw,Pitch,Roll + Positional}
  - M1StSP [Stereo Spatializer] / 2Channel [M1StSP.cs] {Yaw, Pitch, Roll + Positional}
- - M1Horizon [Pair] / 4Pair [DirectionalSound.cs][*DEPRECATED*]
 
 #### Install:
 - Import the .unitypackage via the Assets>Import Package>Custom Package prompt.
