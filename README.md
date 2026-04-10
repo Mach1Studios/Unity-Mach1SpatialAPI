@@ -14,8 +14,6 @@
 - Add the split channels from your Mach1 Spatial mix into the audio or link to it via the `External Audio Filename` into either of the `Main` audio fields
 - Setup as needed and place parent object where needed and to the scale needed
  _turn on the Draw Helpers to assist with this in editor_
-- If channel gizmo indicators are too large, shrink via the following:
-![Gizmo](md/gizmos.gif)
 
 _It is recommended to increase your project's `ProjectSettings` `Max Real Voices` count to accomondate the maximum number of consecutive M1 Spatial objects in your project (by a multiple of 8 or 16)._
 
